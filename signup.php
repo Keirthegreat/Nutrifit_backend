@@ -1,4 +1,8 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST");
+header("Content-Type: application/json; charset=UTF-8");
+
 include 'db.php'; // Include your updated database connection
 
 header('Content-Type: application/json'); // Set the content type to JSON
