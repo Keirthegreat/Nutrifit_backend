@@ -2,6 +2,10 @@
 session_start();
 include 'db.php'; // Include your database connection
 
+header('Content-Type: application/json'); // Set the content type to JSON
+
+$response = [];
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
@@ -17,12 +21,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Successful login
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
-            echo "Login successful!";
+            $response = [
+                'status' => 'success',
+                'message' => 'Login successful!',
+                'user' => [
+                    'id' => $user['id'],
+                    'username' => $user['username']
+                ]
+            ];
         } else {
-            echo "Invalid username or password.";
+            // Invalid credentials
+            $response = [
+                'status' => 'error',
+                'message' => 'Invalid username or password.'
+            ];
         }
     } catch (PDOException $e) {
-        echo "Error: " . $e->getMessage();
+        // Database error
+        $response = [
+            'status' => 'error',
+            'message' => 'Database error: ' . $e->getMessage()
+        ];
     }
+} else {
+    // Invalid request method
+    $response = [
+        'status' => 'error',
+        'message' => 'Invalid request method.'
+    ];
 }
+
+// Return JSON response
+echo json_encode($response);
 ?>
+
