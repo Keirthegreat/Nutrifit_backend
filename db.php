@@ -1,4 +1,9 @@
 <?php
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST");
+header("Content-Type: application/json; charset=UTF-8");
+
 // External URL for the database connection
 $dsn = 'pgsql:host=dpg-csmsdq1u0jms73fsmieg-a.singapore-postgres.render.com;port=5432;dbname=nutrifit_db_bay8';
 $username = 'nutrifit_db_bay8_user';
