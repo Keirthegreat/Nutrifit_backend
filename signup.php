@@ -1,7 +1,7 @@
 <?php
-include 'db.php'; // Include your database connection
-header('Content-Type: application/json'); // Set the content type to JSON
+include 'db.php'; // Include your updated database connection
 
+header('Content-Type: application/json'); // Set the content type to JSON
 $response = [];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
