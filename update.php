@@ -1,8 +1,14 @@
 <?php
-// Set CORS headers to allow cross-origin requests
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST");
-header("Content-Type: application/json; charset=UTF-8");
+// Allow requests from the specific origin where your frontend is hosted
+header("Access-Control-Allow-Origin: http://127.0.0.1:3000"); // Replace with your frontend URL in production
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+// Allow preflight OPTIONS requests (required by some browsers)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 session_start();
 
@@ -51,32 +57,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Handle the file upload
     $profileImage = null; // Default to null in case no image is uploaded
     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] == 0) {
-        // Set the upload directory (Make sure the folder is writable)
-        $uploadDir = "/path/to/Documents/Pic_Profile/";
+        $uploadDir = "/path/to/your/upload/directory/"; // Set to a valid, writable path
         $uploadFile = $uploadDir . basename($_FILES['profile_image']['name']);
 
-        // Debug: Check if file is set and directory is writable
         if (!is_writable($uploadDir)) {
             echo json_encode(["error" => "Upload directory is not writable."]);
             exit();
         }
 
-        // Check if the file is an image
         $fileType = strtolower(pathinfo($uploadFile, PATHINFO_EXTENSION));
         if (in_array($fileType, ['jpg', 'jpeg', 'png', 'gif'])) {
-            // Move the uploaded file to the specified directory
             if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadFile)) {
-                $profileImage = $uploadFile; // Save the file path to database
+                $profileImage = $uploadFile;
             } else {
                 echo json_encode(["error" => "Failed to move uploaded file."]);
                 exit();
             }
         } else {
-            echo json_encode(["error" => "Invalid file type. Please upload a JPG, JPEG, PNG, or GIF file."]);
+            echo json_encode(["error" => "Invalid file type."]);
             exit();
         }
     } else {
-        echo json_encode(["debug" => "No file uploaded or file upload error code: " . $_FILES['profile_image']['error']]);
+        echo json_encode(["debug" => "File upload error or no file uploaded."]);
     }
 
     // Prepare the SQL statement to update the user's profile in the database
@@ -99,7 +101,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         WHERE user_id = :user_id
     ");
 
-    // Bind the form data to the query parameters
     $stmtUpdate->bindParam(':full_name', $fullName);
     $stmtUpdate->bindParam(':username', $username);
     $stmtUpdate->bindParam(':email', $email);
@@ -116,7 +117,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmtUpdate->bindParam(':profile_image', $profileImage);
     $stmtUpdate->bindParam(':user_id', $userId);
 
-    // Execute the query to update the profile
     if ($stmtUpdate->execute()) {
         echo json_encode(["success" => true, "message" => "Profile updated successfully.", "profile_image" => $profileImage]);
     } else {
@@ -124,4 +124,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-
