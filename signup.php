@@ -3,7 +3,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Content-Type: application/json; charset=UTF-8");
 
-include 'db.php'; // Include your updated database connection
+include 'db.php'; // Include your database connection
 
 header('Content-Type: application/json'); // Set the content type to JSON
 $response = [];
@@ -37,11 +37,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bindParam(':password_hash', $hashedPassword);
 
             if ($stmt->execute()) {
-                // Signup successful
-                $response = [
-                    'status' => 'success',
-                    'message' => 'Signup successful! Please log in.'
-                ];
+                // Get the last inserted user ID
+                $userId = $conn->lastInsertId();
+
+                // Now insert data into the user profile table
+                $stmt = $conn->prepare("INSERT INTO user_profile (user_id, full_name, email, username) VALUES (:user_id, :full_name, :email, :username)");
+                $stmt->bindParam(':user_id', $userId);
+                $stmt->bindParam(':full_name', $fullName);
+                $stmt->bindParam(':email', $email);
+                $stmt->bindParam(':username', $username);
+
+                if ($stmt->execute()) {
+                    // Signup and profile creation successful
+                    $response = [
+                        'status' => 'success',
+                        'message' => 'Signup successful! Please log in.'
+                    ];
+                } else {
+                    // Profile creation failed
+                    $response = [
+                        'status' => 'error',
+                        'message' => 'Error creating user profile.'
+                    ];
+                }
             } else {
                 // Signup failed
                 $response = [
