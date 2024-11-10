@@ -7,18 +7,13 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Content-Type: application/json; charset=UTF-8");
 
-// Check if the user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php"); // Redirect to login if not logged in
-    exit;
-}
-
 // Include database connection file
 include('db_connection.php');
 
-// Fetch user data from the database
-$user_id = $_SESSION['user_id']; // Assuming user_id is stored in session after login
+// Set a static user ID for testing purposes
+$user_id = 1; // Replace with a valid user_id from your database for testing
 
+// Fetch user data from the database
 $query = "SELECT * FROM users WHERE id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $user_id);
@@ -82,3 +77,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
+
