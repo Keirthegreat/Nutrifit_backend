@@ -10,17 +10,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-session_start();
-
-// Check if the user is logged in
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(["error" => "User is not logged in."]);
-    exit();
-}
-
 include 'db.php'; // Include the database connection
 
-$userId = $_SESSION['user_id']; // Get logged-in user's ID
+// Set a static user ID for testing purposes
+$userId = 1; // Replace with a valid user_id from your database for testing
 
 // Fetch current user profile data from the profiles table
 $stmt = $conn->prepare("SELECT * FROM profiles WHERE user_id = :user_id");
@@ -124,3 +117,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
+
