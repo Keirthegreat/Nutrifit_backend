@@ -7,6 +7,12 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(["success" => false, "message" => "User not logged in"]);
+    exit;
+}
+
 $userId = $_SESSION['user_id']; // Assuming the user is logged in
 
 // Fetch profile data from the database
@@ -34,19 +40,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $instagram = $_POST['instagram'] ?? '';
 
     // Handle file upload to Supabase Storage
+    $image_url = ''; // Default to empty if no image uploaded
     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] == 0) {
         $profile_image = $_FILES['profile_image'];
         $image_path = $profile_image['tmp_name'];
         $image_name = basename($profile_image['name']);
+        $image_type = mime_content_type($image_path); // Check file type
+
+        // Validate file type (only allow certain types for security)
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!in_array($image_type, $allowed_types)) {
+            echo json_encode(["success" => false, "message" => "Invalid image type. Only JPEG, PNG, and GIF are allowed."]);
+            exit;
+        }
+
+        // Validate file size (maximum of 5MB)
+        if ($profile_image['size'] > 5 * 1024 * 1024) {
+            echo json_encode(["success" => false, "message" => "File size exceeds the maximum limit of 5MB."]);
+            exit;
+        }
 
         // Supabase Storage URL and API Key
-        $supabase_url = 'https://dsoafkhbxwxhzvgivbxh.supabase.co/storage/v1/object/'; // Supabase Storage URL
-        $bucket_name = 'Profile Images'; // Replace with your actual bucket name
-        $supabase_api_key = 'your_supabase_api_key'; // Replace with your Supabase API key
+        $supabase_url = 'https://dsoafkhbxwxhzvgivbxh.supabase.co/storage/v1/object/';
+        $bucket_name = 'your_bucket_name';
+        $supabase_api_key = 'your_supabase_api_key';
 
         // Initialize the cURL request to upload the file to Supabase
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $supabase_url . $bucket_name . '/' . $image_name); // Object path for storage
+        curl_setopt($ch, CURLOPT_URL, $supabase_url . $bucket_name . '/' . $image_name);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "Authorization: Bearer " . $supabase_api_key,
@@ -66,8 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // If upload is successful, the file URL will be the path in Supabase
         $image_url = $supabase_url . $bucket_name . '/' . $image_name;
-    } else {
-        $image_url = ''; // No image uploaded
     }
 
     // Update profile in the database
@@ -83,7 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $stmt->execute();
 
     if ($result) {
-        // Send response back to the frontend
         echo json_encode([
             "success" => true,
             "full_name" => $full_name,
