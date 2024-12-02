@@ -6,7 +6,7 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
 
 // Connection URI from Supabase
-$uri = 'postgres://postgres.dsoafkhbxwxhzvgivbxh:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
+$uri = 'postgres://postgres.dsoafkhbxwxhzvgivbxh:_!._Kgk83RXS8Zy@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
 
 try {
     // Parse the URI into components
@@ -19,14 +19,17 @@ try {
     $password = $db['pass'];
     $dbname = ltrim($db['path'], '/');
 
-    // Create the DSN
-    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;user=$user;password=$password";
+    // Create the DSN (Data Source Name)
+    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
 
-    // Establish the connection
-    $conn = new PDO($dsn);
+    // Establish the PDO connection
+    $conn = new PDO($dsn, $user, $password);
 
     // Set PDO error mode to exception
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Connection success message (can be commented out in production)
+    // echo json_encode(["status" => "success", "message" => "Database connected successfully"]);
 } catch (PDOException $e) {
     // Handle connection error
     die(json_encode([
