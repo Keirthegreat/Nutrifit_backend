@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $image_path = $profile_image['tmp_name'];
         $image_name = basename($profile_image['name']);
 
-        // Prepare the request to Supabase storage bucket
-        $supabase_url = 'https://dsoafkhbxwxhzvgivbxh.supabase.co/storage/v1/object/'; // Your Supabase URL
+        // Supabase Storage URL and API Key
+        $supabase_url = 'https://dsoafkhbxwxhzvgivbxh.supabase.co/storage/v1/object/'; // Supabase Storage URL
         $bucket_name = 'your_bucket_name'; // Replace with your actual bucket name
         $supabase_api_key = 'your_supabase_api_key'; // Replace with your Supabase API key
 
@@ -107,4 +107,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt->close();
 $conn->close();
 ?>
-
