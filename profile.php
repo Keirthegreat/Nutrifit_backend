@@ -1,46 +1,55 @@
 <?php
 session_start();
-include 'db.php'; // Include your database connection
+include 'db.php'; // Include the database connection
 
-// Set CORS headers to allow cross-origin requests (optional)
+// Enable CORS
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Content-Type: application/json");
 
-// Check if user is logged in
+// Check if the user is logged in by verifying the session
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(["success" => false, "message" => "User not logged in"]);
+    echo json_encode(["message" => "Unauthorized. Please log in."]);
     exit;
 }
 
-$userId = $_SESSION['user_id']; // Assuming the user is logged in
+// User ID is obtained from the session
+$userId = $_SESSION['user_id'];
 
-// Fetch profile data from the database
-$query = "SELECT * FROM users WHERE user_id = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $userId);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
+// Handle GET request to fetch the profile
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    // Fetch user data from the database
+    $sql = "SELECT * FROM users WHERE id = $userId";
+    $result = $conn->query($sql);
 
-// If form is submitted, update profile data
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Collect POST data
-    $full_name = $_POST['full_name'] ?? '';
-    $username = $_POST['username'] ?? '';
-    $email = $_POST['email'] ?? '';
-    $phone_number = $_POST['phone_number'] ?? '';
-    $location = $_POST['location'] ?? '';
-    $dob = $_POST['dob'] ?? '';
-    $height = $_POST['height'] ?? '';
-    $weight = $_POST['weight'] ?? '';
-    $target_weight = $_POST['target_weight'] ?? '';
-    $ideal_bmi = $_POST['ideal_bmi'] ?? '';
-    $facebook = $_POST['facebook'] ?? '';
-    $twitter = $_POST['twitter'] ?? '';
-    $instagram = $_POST['instagram'] ?? '';
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        echo json_encode([
+            "message" => "Profile fetched successfully",
+            "data" => $row // All user profile data including image
+        ]);
+    } else {
+        echo json_encode(["message" => "Profile not found"]);
+    }
+}
 
-    // Handle file upload to Supabase Storage
-    $image_url = ''; // Default to empty if no image uploaded
+// Handle POST request to update the profile
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Collect data from the request
+    $fullName = $_POST['full_name'];
+    $username = $_POST['username'];
+    $email = $_POST['email'];
+    $phoneNumber = $_POST['phone_number'];
+    $location = $_POST['location'];
+    $dob = $_POST['dob'];
+    $height = $_POST['height'];
+    $weight = $_POST['weight'];
+    $targetWeight = $_POST['target_weight'];
+    $idealBmi = $_POST['ideal_bmi'];
+
+    // Initialize the image URL to empty by default
+    $image_url = ''; 
+
+    // Handle file upload to Supabase
     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] == 0) {
         $profile_image = $_FILES['profile_image'];
         $image_path = $profile_image['tmp_name'];
@@ -87,41 +96,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // If upload is successful, the file URL will be the path in Supabase
         $image_url = $supabase_url . $bucket_name . '/' . $image_name;
+    } else {
+        // If no image uploaded, keep the old image URL from the database
+        $image_url = isset($_POST['current_profile_image']) ? $_POST['current_profile_image'] : ''; // Use existing image URL
     }
 
-    // Update profile in the database
-    $sql = "UPDATE users SET
-            full_name = ?, username = ?, email = ?, phone_number = ?, location = ?, dob = ?, 
-            height = ?, weight = ?, target_weight = ?, ideal_bmi = ?, 
-            facebook = ?, twitter = ?, instagram = ?, profile_image = ?
-            WHERE user_id = ?";
+    // Update the profile in the database with the image URL
+    $sql = "UPDATE users SET 
+            full_name = '$fullName',
+            username = '$username',
+            email = '$email',
+            phone_number = '$phoneNumber',
+            location = '$location',
+            dob = '$dob',
+            height = $height,
+            weight = $weight,
+            target_weight = $targetWeight,
+            ideal_bmi = $idealBmi,
+            profile_image = '$image_url'
+            WHERE id = $userId";
 
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssssssssi", $full_name, $username, $email, $phone_number, $location, $dob, $height, $weight, 
-                     $target_weight, $ideal_bmi, $facebook, $twitter, $instagram, $image_url, $userId);
-    $result = $stmt->execute();
-
-    if ($result) {
-        echo json_encode([
-            "success" => true,
-            "full_name" => $full_name,
-            "role" => 'Health Enthusiast', // Modify based on your logic for role
-            "email" => $email,
-            "phone_number" => $phone_number,
-            "location" => $location,
-            "dob" => $dob,
-            "height" => $height,
-            "weight" => $weight,
-            "target_weight" => $target_weight,
-            "ideal_bmi" => $ideal_bmi,
-            "profile_image_url" => $image_url // Send the Supabase file URL back to the frontend
-        ]);
+    if ($conn->query($sql) === TRUE) {
+        echo json_encode(["message" => "Profile updated successfully"]);
     } else {
-        echo json_encode(["success" => false, "message" => "Failed to update profile."]);
+        echo json_encode(["message" => "Error updating profile: " . $conn->error]);
     }
 }
-
-// Close database connection
-$stmt->close();
-$conn->close();
 ?>
