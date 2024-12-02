@@ -6,7 +6,7 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
 
 // Connection URI from Supabase
-$uri = 'postgres://postgres.dsoafkhbxwxhzvgivbxh:_!._Kgk83RXS8Zy@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
+$uri = 'postgresql://postgres.dsoafkhbxwxhzvgivbxh:[Keirsteph@12]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
 
 try {
     // Parse the URI into components
