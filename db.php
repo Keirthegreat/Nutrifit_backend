@@ -1,26 +1,38 @@
 <?php
-
+// Add headers for CORS and JSON response
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=UTF-8");
 
-// External URL for the database connection
-$dsn = 'pgsql:host=dpg-csmsdq1u0jms73fsmieg-a.singapore-postgres.render.com;port=5432;dbname=nutrifit_db_bay8';
-$username = 'nutrifit_db_bay8_user';
-$password = 'iLLcdyFkYOXj5xHK2ERlWtCOlYZn8gZ4';
+// Connection URI from Supabase
+$uri = 'postgres://postgres.dsoafkhbxwxhzvgivbxh:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
 
 try {
-    // Create a new PDO instance
-    $conn = new PDO($dsn, $username, $password);
+    // Parse the URI into components
+    $db = parse_url($uri);
 
-    // Set PDO error mode to exception for better error handling
+    // Extract the connection details
+    $host = $db['host'];
+    $port = $db['port'];
+    $user = $db['user'];
+    $password = $db['pass'];
+    $dbname = ltrim($db['path'], '/');
+
+    // Create the DSN
+    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;user=$user;password=$password";
+
+    // Establish the connection
+    $conn = new PDO($dsn);
+
+    // Set PDO error mode to exception
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    // Handle connection errors
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Database connection failed: ' . $e->getMessage()
-    ]);
-    exit; // Stop further execution if there's a connection error
+    // Handle connection error
+    die(json_encode([
+        "status" => "error",
+        "message" => "Database connection failed: " . $e->getMessage()
+    ]));
 }
 ?>
+
