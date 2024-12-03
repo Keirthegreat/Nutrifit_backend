@@ -1,17 +1,18 @@
 <?php
-header("Access-Control-Allow-Origin: http://127.0.0.1:3000"); // Replace with your frontend URL
+// Add CORS headers
+header("Access-Control-Allow-Origin: http://127.0.0.1:3000");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-session_start(); // Start the session
-
-include 'db.php'; // Include database connection
+// Start the session
+session_start();
+include 'db.php';
 
 $response = []; // Initialize response
 
+// Check if the user is logged in
 if (!isset($_SESSION['user_id'])) {
-    // Check if the user is logged in
     $response = [
         'status' => 'error',
         'message' => 'User not logged in.'
@@ -20,12 +21,14 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Handle POST request
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $user_id = $_SESSION['user_id']; // Get user_id from session
 
-    $fullName = $_POST['fullName'];
-    $username = $_POST['username'];
-    $email = $_POST['email'];
+    // Validate and sanitize inputs
+    $fullName = htmlspecialchars($_POST['fullName'], ENT_QUOTES, 'UTF-8');
+    $username = htmlspecialchars($_POST['username'], ENT_QUOTES, 'UTF-8');
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     $phone = $_POST['phone'];
     $location = $_POST['location'];
     $dob = $_POST['dob'];
@@ -40,8 +43,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // Handle profile picture upload
     $profilePicture = null;
+    $uploadDir = 'uploads/';
     if (!empty($_FILES['profilePicture']['name'])) {
-        $uploadDir = 'uploads/';
+        // Ensure upload directory exists
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
         $profilePicture = $uploadDir . basename($_FILES['profilePicture']['name']);
         move_uploaded_file($_FILES['profilePicture']['tmp_name'], $profilePicture);
     }
@@ -81,17 +88,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             'message' => 'Profile saved successfully.'
         ];
     } catch (PDOException $e) {
+        error_log('Database error: ' . $e->getMessage());
         $response = [
             'status' => 'error',
-            'message' => 'Database error: ' . $e->getMessage()
+            'message' => 'An error occurred while saving the profile. Please try again later.'
         ];
     }
 } else {
+    // Handle invalid request methods
     $response = [
         'status' => 'error',
         'message' => 'Invalid request method.'
     ];
 }
 
+// Return JSON response
 echo json_encode($response);
 ?>
