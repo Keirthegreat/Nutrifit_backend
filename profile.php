@@ -5,51 +5,48 @@ header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json; charset=UTF-8");
 
 session_start();
-include 'db.php'; // Include your database connection
+include 'db.php'; // Include database connection
 
-// Handle OPTIONS request
+// Handle OPTIONS requests
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     http_response_code(200);
     exit();
 }
 
-// Determine request method
-$method = $_SERVER["REQUEST_METHOD"];
+// Validate database connection
+if (!isset($conn)) {
+    http_response_code(500);
+    echo json_encode(["message" => "Database connection not established"]);
+    exit();
+}
 
-if ($method === "GET" && isset($_GET["endpoint"])) {
-    $endpoint = $_GET["endpoint"];
-    $userId = $_GET["userId"] ?? null;
+try {
+    // Determine request method
+    $method = $_SERVER["REQUEST_METHOD"];
 
-    switch ($endpoint) {
-        case "dashboard":
+    if ($method === "GET" && isset($_GET["endpoint"])) {
+        $endpoint = $_GET["endpoint"];
+        $userId = $_GET["userId"] ?? null;
+
+        if ($endpoint === "dashboard") {
             if ($userId) {
+                // Fetch dashboard data
                 $stmt = $conn->prepare("SELECT current_bmi, ideal_bmi, current_calories FROM users WHERE id = :id");
-                $stmt->bindParam(':id', $userId);
+                $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
                 $stmt->execute();
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                echo json_encode($result);
+                echo json_encode($result ?: ["message" => "No data found"]);
             } else {
                 echo json_encode(["message" => "User ID is required"]);
             }
-            break;
-
-        default:
+        } else {
             echo json_encode(["message" => "Invalid endpoint"]);
-            break;
-    }
-} elseif ($method === "POST") {
-    if (!empty($_FILES['profile_image']['tmp_name'])) {
-        // Handle file upload if profile_image is included
-        $uploadDir = 'uploads/';
-        $profileImagePath = $uploadDir . basename($_FILES['profile_image']['name']);
-        move_uploaded_file($_FILES['profile_image']['tmp_name'], $profileImagePath);
-    }
+        }
+    } elseif ($method === "POST") {
+        $input = json_decode(file_get_contents("php://input"), true) ?: $_POST;
+        $endpoint = $input["endpoint"] ?? null;
 
-    $input = json_decode(file_get_contents("php://input"), true) ?: $_POST; // Support both JSON and form-data
-    $endpoint = $input["endpoint"] ?? null;
-
-    switch ($endpoint) {
-        case "profile_save":
+        if ($endpoint === "profile_save") {
             $userId = $input["userId"];
             $username = $input["username"];
             $ideal_bmi = $input["ideal_bmi"];
@@ -65,6 +62,18 @@ if ($method === "GET" && isset($_GET["endpoint"])) {
             $twitter = $input["twitter"];
             $instagram = $input["instagram"];
 
+            // Handle optional profile image
+            $profileImagePath = null;
+            if (!empty($_FILES['profile_image']['tmp_name'])) {
+                $uploadDir = 'uploads/';
+                $profileImagePath = $uploadDir . basename($_FILES['profile_image']['name']);
+                if (!move_uploaded_file($_FILES['profile_image']['tmp_name'], $profileImagePath)) {
+                    echo json_encode(["message" => "Failed to upload profile image"]);
+                    exit();
+                }
+            }
+
+            // Update profile data
             $stmt = $conn->prepare("
                 UPDATE users 
                 SET username = :username,
@@ -97,50 +106,47 @@ if ($method === "GET" && isset($_GET["endpoint"])) {
                 ':facebook' => $facebook,
                 ':twitter' => $twitter,
                 ':instagram' => $instagram,
-                ':profile_image' => $profileImagePath ?? null,
+                ':profile_image' => $profileImagePath,
                 ':id' => $userId,
             ]);
 
             echo json_encode(["message" => "Profile updated successfully!"]);
-            break;
-
-        case "bmi_update":
+        } elseif ($endpoint === "bmi_update") {
             $userId = $input["userId"];
             $current_bmi = $input["current_bmi"];
 
             $stmt = $conn->prepare("UPDATE users SET current_bmi = :current_bmi WHERE id = :id");
-            $stmt->bindParam(':current_bmi', $current_bmi);
-            $stmt->bindParam(':id', $userId);
+            $stmt->bindParam(':current_bmi', $current_bmi, PDO::PARAM_STR);
+            $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 echo json_encode(["message" => "BMI updated successfully!"]);
             } else {
                 echo json_encode(["message" => "Failed to update BMI"]);
             }
-            break;
-
-        case "calories_update":
+        } elseif ($endpoint === "calories_update") {
             $userId = $input["userId"];
             $current_calories = $input["current_calories"];
             $target_calories = $input["target_calories"];
 
             $stmt = $conn->prepare("UPDATE users SET current_calories = :current_calories, target_calories = :target_calories WHERE id = :id");
-            $stmt->bindParam(':current_calories', $current_calories);
-            $stmt->bindParam(':target_calories', $target_calories);
-            $stmt->bindParam(':id', $userId);
+            $stmt->bindParam(':current_calories', $current_calories, PDO::PARAM_INT);
+            $stmt->bindParam(':target_calories', $target_calories, PDO::PARAM_INT);
+            $stmt->bindParam(':id', $userId, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 echo json_encode(["message" => "Calories updated successfully!"]);
             } else {
                 echo json_encode(["message" => "Failed to update calories"]);
             }
-            break;
-
-        default:
+        } else {
             echo json_encode(["message" => "Invalid endpoint"]);
-            break;
+        }
+    } else {
+        echo json_encode(["message" => "Invalid request method"]);
     }
-} else {
-    echo json_encode(["message" => "Invalid request method"]);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(["message" => "An error occurred", "error" => $e->getMessage()]);
 }
 ?>
