@@ -8,7 +8,7 @@ header("Content-Type: application/json");
 
 // Check if the user is logged in by verifying the session
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(["message" => "Unauthorized. Please log in."]);
+    echo json_encode(["success" => false, "message" => "Unauthorized. Please log in."]);
     exit;
 }
 
@@ -24,11 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
         echo json_encode([
+            "success" => true,
             "message" => "Profile fetched successfully",
             "data" => $row // All user profile data including image
         ]);
     } else {
-        echo json_encode(["message" => "Profile not found"]);
+        echo json_encode(["success" => false, "message" => "Profile not found"]);
     }
 }
 
@@ -117,9 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             WHERE id = $userId";
 
     if ($conn->query($sql) === TRUE) {
-        echo json_encode(["message" => "Profile updated successfully"]);
+        echo json_encode(["success" => true, "message" => "Profile updated successfully"]);
     } else {
-        echo json_encode(["message" => "Error updating profile: " . $conn->error]);
+        echo json_encode(["success" => false, "message" => "Error updating profile: " . $conn->error]);
     }
 }
 ?>
+
