@@ -1,10 +1,8 @@
 <?php
-// Enable CORS
-header("Access-Control-Allow-Origin: http://127.0.0.1:3000"); // Replace with your frontend's origin
+header("Access-Control-Allow-Origin: http://127.0.0.1:3000"); // Replace with your frontend URL
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
-
 
 session_start(); // Start the session
 
