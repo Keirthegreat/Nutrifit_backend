@@ -71,8 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Supabase Storage URL and API Key
         $supabase_url = 'https://dsoafkhbxwxhzvgivbxh.supabase.co/storage/v1/object/';
-        $bucket_name = 'your_bucket_name';
-        $supabase_api_key = 'your_supabase_api_key';
+        $bucket_name = 'Profile Images';
+        $supabase_api_key = 'https://dsoafkhbxwxhzvgivbxh.supabase.co';
 
         // Initialize the cURL request to upload the file to Supabase
         $ch = curl_init();
