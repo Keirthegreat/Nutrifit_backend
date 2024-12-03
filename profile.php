@@ -70,9 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // Supabase Storage URL and API Key
-        $supabase_url = 'https://dsoafkhbxwxhzvgivbxh.supabase.co/storage/v1/object/';
+        $supabase_url = 'https://dsoafkhbxwxhzvgivbxh.supabase.co';
         $bucket_name = 'Profile Images';
-        $supabase_api_key = 'https://dsoafkhbxwxhzvgivbxh.supabase.co';
+        $supabase_api_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzb2Fma2hieHd4aHp2Z2l2YnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxNDI4NTIsImV4cCI6MjA0ODcxODg1Mn0.-KmKuO-nzjevx7MvnVKtm-q7kNNc4-I3y5zBH19Bqzw';
 
         // Initialize the cURL request to upload the file to Supabase
         $ch = curl_init();
