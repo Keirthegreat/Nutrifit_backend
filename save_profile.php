@@ -35,10 +35,10 @@ try {
     $sql = "
         INSERT INTO \"PROFILES\" (
             user_id, full_name, username, email, phone_number, location, 
-            date_of_birth, height_cm, weight_kg, target_weight, ideal_bmi, bio, updated_at
+            date_of_birth, height_cm, weight_kg, target_weight, ideal_bmi, role, social_links, profile_picture_url, updated_at
         ) VALUES (
             :user_id, :full_name, :username, :email, :phone_number, :location, 
-            :date_of_birth, :height_cm, :weight_kg, :target_weight, :ideal_bmi, :bio, NOW()
+            :date_of_birth, :height_cm, :weight_kg, :target_weight, :ideal_bmi, :role, :social_links, :profile_picture_url, NOW()
         )
         ON CONFLICT (user_id) DO UPDATE SET
             full_name = EXCLUDED.full_name,
@@ -51,7 +51,9 @@ try {
             weight_kg = EXCLUDED.weight_kg,
             target_weight = EXCLUDED.target_weight,
             ideal_bmi = EXCLUDED.ideal_bmi,
-            bio = EXCLUDED.bio,
+            role = EXCLUDED.role,
+            social_links = EXCLUDED.social_links,
+            profile_picture_url = EXCLUDED.profile_picture_url,
             updated_at = NOW();
     ";
 
@@ -68,7 +70,9 @@ try {
         ':weight_kg' => $data['weight_kg'] ?? null,
         ':target_weight' => $data['target_weight'] ?? null,
         ':ideal_bmi' => $data['ideal_bmi'] ?? null,
-        ':bio' => $data['bio'] ?? null,
+        ':role' => $data['role'] ?? null,
+        ':social_links' => json_encode($data['social_links'] ?? []),
+        ':profile_picture_url' => $data['profile_picture_url'] ?? null,
     ]);
 
     echo json_encode([
