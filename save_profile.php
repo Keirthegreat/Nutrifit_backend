@@ -33,7 +33,7 @@ try {
 
     // Prepare SQL to insert or update profile
     $sql = "
-        INSERT INTO profile (
+        INSERT INTO \"PROFILES\" (
             user_id, full_name, username, email, phone_number, location, 
             date_of_birth, height_cm, weight_kg, target_weight, ideal_bmi, bio, updated_at
         ) VALUES (
