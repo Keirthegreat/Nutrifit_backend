@@ -1,4 +1,18 @@
 <?php
+// Start the session at the very beginning of the file
+session_start();
+
+// Debugging: Check if a session has started and if the user ID exists
+if (session_status() === PHP_SESSION_ACTIVE) {
+    if (isset($_SESSION['user_id'])) {
+        error_log("Session is active. User ID: " . $_SESSION['user_id']);
+    } else {
+        error_log("Session is active but no user is logged in.");
+    }
+} else {
+    error_log("Session is not active.");
+}
+
 // CORS headers at the top of the file
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
@@ -11,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-session_start();
 include 'db.php'; // Include your database connection
 
 $response = []; // Initialize response array
@@ -33,6 +46,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Successful login
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+
+            // Debugging: Log session variables
+            error_log("User logged in successfully. Session user_id: " . $_SESSION['user_id']);
+
             $response = [
                 'status' => 'success',
                 'message' => 'Login successful!',
@@ -63,3 +80,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Return JSON response
 echo json_encode($response);
+?>
+
