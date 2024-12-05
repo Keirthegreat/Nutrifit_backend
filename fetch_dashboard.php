@@ -32,8 +32,8 @@ if (!$user_id) {
 }
 
 try {
-    // Fetch data from the DASHBOARD table
-    $stmt = $conn->prepare("SELECT current_bmi, calories_consumed, Target, updated_at FROM DASHBOARD WHERE user_id = :user_id");
+    // Fetch data from the DASHBOARD table (case-sensitive)
+    $stmt = $conn->prepare('SELECT current_bmi, calories_consumed, Target, updated_at FROM "DASHBOARD" WHERE user_id = :user_id');
     $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
     $stmt->execute();
 
