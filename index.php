@@ -30,8 +30,18 @@ include 'db.php'; // Include your database connection
 $response = []; // Initialize response array
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = $_POST['username'] ?? null;
+    $password = $_POST['password'] ?? null;
+
+    // Validate required fields
+    if (!$username || !$password) {
+        $response = [
+            'status' => 'error',
+            'message' => 'Username and password are required.'
+        ];
+        echo json_encode($response);
+        exit();
+    }
 
     try {
         // Prepare and execute the query to fetch user by username
@@ -53,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $response = [
                 'status' => 'success',
                 'message' => 'Login successful!',
-                'user_id' => $user['id'],
+                'user_id' => $user['id'], // Ensure user_id is sent
                 'username' => $user['username']
             ];
         } else {
@@ -81,4 +91,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 // Return JSON response
 echo json_encode($response);
 ?>
-
