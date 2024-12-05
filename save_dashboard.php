@@ -37,7 +37,7 @@ try {
             exit;
         }
 
-        $stmt = $conn->prepare("SELECT user_id, current_bmi, calories_consumed, Target, updated_at FROM dashboard WHERE user_id = :user_id");
+        $stmt = $conn->prepare("SELECT user_id, current_bmi, updated_at FROM dashboard WHERE user_id = :user_id");
         $stmt->execute([':user_id' => $user_id]);
         $dashboardData = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -54,42 +54,36 @@ try {
             http_response_code(404); // Not Found
         }
     } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Handle POST request: Record BMI
+        // Handle POST request: Update current BMI
         $input = json_decode(file_get_contents('php://input'), true);
 
         $user_id = $input['user_id'] ?? null;
         $current_bmi = $input['current_bmi'] ?? null;
-        $calories_consumed = $input['calories_consumed'] ?? null;
-        $target = $input['Target'] ?? null;
 
-        if (!$user_id || !$current_bmi || !$calories_consumed || !$target) {
+        if (!$user_id || !$current_bmi) {
             echo json_encode([
                 'status' => 'error',
-                'message' => 'All fields (User ID, BMI, Calories Consumed, Target) are required.'
+                'message' => 'User ID and BMI are required.'
             ]);
             http_response_code(400); // Bad Request
             exit;
         }
 
         // Insert or update the dashboard table
-        $stmt = $conn->prepare("INSERT INTO dashboard (user_id, current_bmi, calories_consumed, Target, updated_at)
-                                VALUES (:user_id, :current_bmi, :calories_consumed, :target, NOW())
+        $stmt = $conn->prepare("INSERT INTO dashboard (user_id, current_bmi, updated_at)
+                                VALUES (:user_id, :current_bmi, NOW())
                                 ON CONFLICT (user_id)
                                 DO UPDATE SET 
                                     current_bmi = EXCLUDED.current_bmi,
-                                    calories_consumed = EXCLUDED.calories_consumed,
-                                    Target = EXCLUDED.Target,
                                     updated_at = NOW()");
         $stmt->execute([
             ':user_id' => $user_id,
-            ':current_bmi' => $current_bmi,
-            ':calories_consumed' => $calories_consumed,
-            ':target' => $target
+            ':current_bmi' => $current_bmi
         ]);
 
         echo json_encode([
             'status' => 'success',
-            'message' => 'BMI and other data recorded successfully.'
+            'message' => 'BMI recorded successfully.'
         ]);
     } else {
         // Method not allowed
@@ -115,4 +109,3 @@ try {
     http_response_code(500); // Internal Server Error
 }
 ?>
-
