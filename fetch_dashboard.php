@@ -4,14 +4,20 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 
-// Database connection
-$host = 'localhost'; // Update with your DB host
-$db_name = 'your_database'; // Update with your DB name
-$username = 'your_user'; // Update with your DB user
-$password = 'your_password'; // Update with your DB password
+// Database connection URI
+$uri = 'postgresql://postgres.dsoafkhbxwxhzvgivbxh:Keirsteph@12@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
 
 try {
-    $conn = new PDO("pgsql:host=$host;dbname=$db_name", $username, $password);
+    // Parse the URI to extract connection details
+    $parsedUri = parse_url($uri);
+    $host = $parsedUri['host'];
+    $port = $parsedUri['port'];
+    $db_name = ltrim($parsedUri['path'], '/');
+    $username = $parsedUri['user'];
+    $password = $parsedUri['pass'];
+
+    // Establish connection using PDO
+    $conn = new PDO("pgsql:host=$host;port=$port;dbname=$db_name", $username, $password);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     echo json_encode(['status' => 'error', 'message' => 'Database connection failed: ' . $e->getMessage()]);
@@ -26,8 +32,8 @@ if (!$user_id) {
 }
 
 try {
-    // Fetch data from the DASHBOARD table
-    $stmt = $conn->prepare("SELECT current_bmi, calories_consumed, Target, updated_at FROM DASHBOARD WHERE user_id = :user_id");
+    // Fetch data from the table
+    $stmt = $conn->prepare("SELECT current_bmi, calories_consumed, Target, updated_at FROM your_table_name WHERE user_id = :user_id");
     $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
     $stmt->execute();
 
