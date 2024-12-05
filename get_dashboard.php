@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 try {
     // Database credentials
-    $uri = 'postgresql://your_database_user:your_password@your_database_host:your_port/your_database_name'; // Update with actual credentials
+    $uri = 'postgresql://postgres.dsoafkhbxwxhzvgivbxh:Keirsteph@12@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'; // Update with actual credentials
     $db = parse_url($uri);
     $dsn = "pgsql:host={$db['host']};port={$db['port']};dbname=" . ltrim($db['path'], '/');
     $conn = new PDO($dsn, $db['user'], $db['pass']);
