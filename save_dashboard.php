@@ -59,6 +59,8 @@ try {
 
         $user_id = $input['user_id'] ?? null;
         $current_bmi = $input['current_bmi'] ?? null;
+        $calories_consumed = $input['calories_consumed'] ?? 0; // Default to 0 if not provided
+        $target = $input['Target'] ?? 0; // Default to 0 if not provided
 
         if (!$user_id || !$current_bmi) {
             echo json_encode([
@@ -70,15 +72,19 @@ try {
         }
 
         // Insert or update the dashboard table
-        $stmt = $conn->prepare('INSERT INTO "DASHBOARD" ("user_id", "current_bmi", "updated_at")
-                                VALUES (:user_id, :current_bmi, NOW())
+        $stmt = $conn->prepare('INSERT INTO "DASHBOARD" ("user_id", "current_bmi", "calories_consumed", "Target", "updated_at")
+                                VALUES (:user_id, :current_bmi, COALESCE(:calories_consumed, 0), COALESCE(:target, 0), NOW())
                                 ON CONFLICT ("user_id")
                                 DO UPDATE SET 
                                     "current_bmi" = EXCLUDED."current_bmi",
+                                    "calories_consumed" = COALESCE(EXCLUDED."calories_consumed", "DASHBOARD"."calories_consumed"),
+                                    "Target" = COALESCE(EXCLUDED."Target", "DASHBOARD"."Target"),
                                     "updated_at" = NOW()');
         $stmt->execute([
             ':user_id' => $user_id,
-            ':current_bmi' => $current_bmi
+            ':current_bmi' => $current_bmi,
+            ':calories_consumed' => $calories_consumed,
+            ':target' => $target
         ]);
 
         echo json_encode([
