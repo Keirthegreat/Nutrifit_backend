@@ -5,21 +5,6 @@ header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json; charset=UTF-8");
 
-
-// Ensure the user is logged in
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'User not logged in.'
-    ]);
-    exit;
-}
-
-// Get the user_id from the session
-$user_id = $_SESSION['user_id'];
-
-
-
 // Connection to PostgreSQL
 $uri = 'postgresql://postgres.dsoafkhbxwxhzvgivbxh:Keirsteph@12@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'; // Update with your database credentials
 
@@ -42,6 +27,19 @@ try {
         echo json_encode([
             'status' => 'error',
             'message' => 'Required fields are missing.'
+        ]);
+        exit;
+    }
+
+    // Ensure the user_id from the frontend matches an existing user
+    $stmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = :user_id");
+    $stmt->execute([':user_id' => $data['user_id']]);
+    $userExists = $stmt->fetchColumn();
+
+    if (!$userExists) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Invalid user ID. User not found.'
         ]);
         exit;
     }
