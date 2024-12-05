@@ -12,17 +12,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 try {
     // Database credentials
-    $uri = 'postgresql://postgres.dsoafkhbxwxhzvgivbxh:Keirsteph@12@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'; // Update with actual credentials
+    $uri = 'postgresql://postgres.dsoafkhbxwxhzvgivbxh:Keirsteph@12@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'; // Replace with actual credentials
     $db = parse_url($uri);
+
+    // Parse the URI and validate credentials
+    if (!isset($db['host'], $db['port'], $db['user'], $db['pass'], $db['path'])) {
+        throw new Exception("Invalid database credentials. Check the connection URI.");
+    }
+
     $dsn = "pgsql:host={$db['host']};port={$db['port']};dbname=" . ltrim($db['path'], '/');
     $conn = new PDO($dsn, $db['user'], $db['pass']);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Get user_id from query parameter
-    $user_id = $_GET['user_id'] ?? null;
+    // Get user_id from query parameter and validate
+    $user_id = filter_input(INPUT_GET, 'user_id', FILTER_VALIDATE_INT);
 
     if (!$user_id) {
-        echo json_encode(['status' => 'error', 'message' => 'User ID is required']);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Invalid or missing User ID.'
+        ]);
+        http_response_code(400); // Bad Request
         exit;
     }
 
@@ -33,12 +43,30 @@ try {
 
     // Check if data exists
     if ($dashboardData) {
-        echo json_encode(['status' => 'success', 'data' => $dashboardData]);
+        echo json_encode([
+            'status' => 'success',
+            'data' => $dashboardData
+        ]);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Dashboard data not found']);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Dashboard data not found for the given User ID.'
+        ]);
+        http_response_code(404); // Not Found
     }
 } catch (PDOException $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+    // Catch database connection or query errors
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Database error: ' . $e->getMessage()
+    ]);
+    http_response_code(500); // Internal Server Error
+} catch (Exception $e) {
+    // Catch any general errors
+    echo json_encode([
+        'status' => 'error',
+        'message' => $e->getMessage()
+    ]);
+    http_response_code(500); // Internal Server Error
 }
 ?>
-
