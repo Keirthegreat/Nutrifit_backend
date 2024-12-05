@@ -37,7 +37,7 @@ try {
             exit;
         }
 
-        $stmt = $conn->prepare("SELECT user_id, current_bmi, updated_at FROM dashboard WHERE user_id = :user_id");
+        $stmt = $conn->prepare('SELECT "user_id", "current_bmi", "updated_at" FROM "DASHBOARD" WHERE "user_id" = :user_id');
         $stmt->execute([':user_id' => $user_id]);
         $dashboardData = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -70,12 +70,12 @@ try {
         }
 
         // Insert or update the dashboard table
-        $stmt = $conn->prepare("INSERT INTO dashboard (user_id, current_bmi, updated_at)
+        $stmt = $conn->prepare('INSERT INTO "DASHBOARD" ("user_id", "current_bmi", "updated_at")
                                 VALUES (:user_id, :current_bmi, NOW())
-                                ON CONFLICT (user_id)
+                                ON CONFLICT ("user_id")
                                 DO UPDATE SET 
-                                    current_bmi = EXCLUDED.current_bmi,
-                                    updated_at = NOW()");
+                                    "current_bmi" = EXCLUDED."current_bmi",
+                                    "updated_at" = NOW()');
         $stmt->execute([
             ':user_id' => $user_id,
             ':current_bmi' => $current_bmi
