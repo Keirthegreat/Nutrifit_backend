@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         // Prepare and execute the query to fetch user by username
-        $stmt = $conn->prepare("SELECT * FROM users WHERE username = :username");
+        $stmt = $conn->prepare("SELECT user_id, username, password_hash FROM users WHERE username = :username");
         $stmt->bindParam(':username', $username);
         $stmt->execute();
 
@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Check if user exists and verify password
         if ($user && password_verify($password, $user['password_hash'])) {
             // Successful login
-            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_id'] = $user['user_id']; // Correctly use 'user_id' from the database
             $_SESSION['username'] = $user['username'];
 
             // Debugging: Log session variables
@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $response = [
                 'status' => 'success',
                 'message' => 'Login successful!',
-                'user_id' => $user['id'], // Ensure user_id is sent
+                'user_id' => $user['user_id'], // Correctly send 'user_id'
                 'username' => $user['username']
             ];
         } else {
