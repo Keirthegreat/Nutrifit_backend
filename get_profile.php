@@ -16,7 +16,7 @@ try {
         exit;
     }
 
-    $stmt = $conn->prepare("SELECT * FROM \"PROFILES\" WHERE user_id = :user_id");
+    $stmt = $conn->prepare("SELECT user_id, role, social_links FROM \"PROFILES\" WHERE user_id = :user_id");
     $stmt->execute([':user_id' => $user_id]);
     $profile = $stmt->fetch(PDO::FETCH_ASSOC);
 
