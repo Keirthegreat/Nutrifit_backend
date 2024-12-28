@@ -16,10 +16,13 @@ try {
         exit;
     }
 
-    // Make sure to use the correct column names in your query
+    // Update query to match the column names in your database
     $stmt = $conn->prepare("SELECT full_name, EXTRACT(YEAR FROM AGE(date_of_birth)) AS age, height_cm, weight_kg, target_weight, ideal_bmi FROM \"PROFILES\" WHERE user_id = :user_id");
     $stmt->execute([':user_id' => $user_id]);
     $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Log the fetched profile data for debugging
+    error_log(json_encode($profile));
 
     if ($profile) {
         echo json_encode(['status' => 'success', 'data' => $profile]);
